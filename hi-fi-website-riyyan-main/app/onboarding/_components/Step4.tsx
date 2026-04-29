@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon, UploadIcon, FileTextIcon } from "lucide-react";
 import { useState, useRef } from "react";
+import { uploadFileToServer } from "@/lib/uploadClient";
 
 export default function Step4({
   onNext,
@@ -12,11 +13,23 @@ export default function Step4({
   onBack: () => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+      const f = e.target.files[0];
+      setFile(f);
+      try {
+        setUploading(true);
+        const res = await uploadFileToServer(f, "cv");
+        if (res?.success) setUploadedUrl(res.url);
+      } catch (err) {
+        console.error("Upload error:", err);
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -24,12 +37,21 @@ export default function Step4({
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const droppedFile = e.dataTransfer.files[0];
       if (droppedFile.name.match(/\.(pdf|doc|docx)$/i)) {
         setFile(droppedFile);
+        try {
+          setUploading(true);
+          const res = await uploadFileToServer(droppedFile, "cv");
+          if (res?.success) setUploadedUrl(res.url);
+        } catch (err) {
+          console.error("Upload error:", err);
+        } finally {
+          setUploading(false);
+        }
       }
     }
   };
@@ -68,8 +90,13 @@ export default function Step4({
               {file.name}
             </p>
             <p className="text-[12px] md:text-[13px] font-medium text-slate-400">
-              Click or drag to replace
+              {uploading ? 'Uploading...' : uploadedUrl ? 'Uploaded' : 'Click or drag to replace'}
             </p>
+            {uploadedUrl && (
+              <a className="text-[12px] text-blue-600 mt-2 underline" href={uploadedUrl} target="_blank" rel="noreferrer">
+                View uploaded file
+              </a>
+            )}
           </div>
         ) : (
           <>
