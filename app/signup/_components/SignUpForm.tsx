@@ -6,12 +6,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSocialLoading, setIsSocialLoading] = useState<string | null>(null);
+  const [showAccountSelector, setShowAccountSelector] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleSocialAuth = (provider: string) => {
+    setIsSocialLoading(provider);
+    
+    // Simulate opening social auth window
+    setTimeout(() => {
+      setIsSocialLoading(null);
+      setShowAccountSelector(provider);
+    }, 800);
+  };
+
+  const confirmAccount = () => {
+    setShowAccountSelector(null);
+    setIsSocialLoading("authenticating");
+    
+    // Final redirect simulation to onboarding
+    setTimeout(() => {
+      router.push('/onboarding');
+    }, 1500);
+  };
 
   return (
     <div className="w-full max-w-[420px] flex flex-col items-center lg:items-start font-poppins">
@@ -142,26 +166,38 @@ export default function SignUpForm() {
       <div className="w-full grid grid-cols-2 gap-4">
         <Button
           variant="ghost"
-          className="h-[46px] rounded-[16px] bg-white font-medium gap-3 hover:bg-slate-50 border border-[#E8ECF0]"
+          disabled={!!isSocialLoading}
+          className="h-[46px] rounded-[16px] bg-white font-medium gap-3 hover:bg-slate-50 border border-[#E8ECF0] cursor-pointer"
+          onClick={() => handleSocialAuth('Google')}
         >
-          <Image
-            src="https://www.google.com/favicon.ico"
-            alt="Google"
-            width={20}
-            height={20}
-          />
+          {isSocialLoading === 'Google' ? (
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+          ) : (
+            <Image
+              src="https://www.google.com/favicon.ico"
+              alt="Google"
+              width={20}
+              height={20}
+            />
+          )}
           Google
         </Button>
         <Button
           variant="ghost"
-          className="h-[46px] rounded-[16px] bg-white font-medium text-slate-600 gap-3 hover:bg-slate-50 border border-[#E8ECF0]"
+          disabled={!!isSocialLoading}
+          className="h-[46px] rounded-[16px] bg-white font-medium text-slate-600 gap-3 hover:bg-slate-50 border border-[#E8ECF0] cursor-pointer"
+          onClick={() => handleSocialAuth('Facebook')}
         >
-          <Image
-            src="https://www.facebook.com/favicon.ico"
-            alt="Facebook"
-            width={20}
-            height={20}
-          />
+          {isSocialLoading === 'Facebook' ? (
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+          ) : (
+            <Image
+              src="https://www.facebook.com/favicon.ico"
+              alt="Facebook"
+              width={20}
+              height={20}
+            />
+          )}
           Facebook
         </Button>
       </div>
@@ -174,6 +210,65 @@ export default function SignUpForm() {
           </Link>
         </p>
       </div>
+
+      {/* Account Selector Modal Simulation */}
+      {showAccountSelector && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-[360px] rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-6 text-center border-b border-slate-50">
+              <div className="flex justify-center mb-4">
+                <Image
+                  src={showAccountSelector === 'Google' ? "https://www.google.com/favicon.ico" : "https://www.facebook.com/favicon.ico"}
+                  alt={showAccountSelector}
+                  width={40}
+                  height={40}
+                />
+              </div>
+              <h3 className="text-[18px] font-bold text-slate-900">Choose an account</h3>
+              <p className="text-[13px] text-slate-500 mt-1">to continue to Wirapath</p>
+            </div>
+            
+            <div className="p-2">
+              <button 
+                onClick={confirmAccount}
+                className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors text-left rounded-[16px]"
+              >
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">
+                  A
+                </div>
+                <div>
+                  <p className="text-[14px] font-bold text-slate-900">Alex</p>
+                  <p className="text-[12px] text-slate-500">alex.dev@gmail.com</p>
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => setShowAccountSelector(null)}
+                className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors text-left rounded-[16px]"
+              >
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                  <span className="text-[18px]">+</span>
+                </div>
+                <div>
+                  <p className="text-[14px] font-medium text-slate-600">Use another account</p>
+                </div>
+              </button>
+            </div>
+            
+            <div className="p-4 bg-slate-50/50 text-[11px] text-slate-400 text-center leading-relaxed">
+              To continue, Google will share your name, email address, language preference, and profile picture with Wirapath.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Final Authenticating Loader */}
+      {isSocialLoading === 'authenticating' && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[60] flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-4" />
+          <p className="text-[15px] font-semibold text-blue-900 animate-pulse">Authenticating...</p>
+        </div>
+      )}
     </div>
   );
 }

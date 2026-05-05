@@ -36,7 +36,10 @@ export default function OnboardingPage() {
       />
 
       <div className="hidden lg:block">
-        <OnboardingSidebar currentStep={currentStep} />
+        <OnboardingSidebar 
+          currentStep={currentStep} 
+          onSkip={finishOnboarding}
+        />
       </div>
 
       <div className="grow min-h-screen flex flex-col items-center bg-white px-4 md:px-8 py-10 md:py-0 md:justify-center">

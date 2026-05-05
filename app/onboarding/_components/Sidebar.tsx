@@ -15,8 +15,10 @@ const steps = [
 
 export default function OnboardingSidebar({
   currentStep,
+  onSkip,
 }: {
   currentStep: number;
+  onSkip?: () => void;
 }) {
   return (
     <div className="w-[340px] h-full bg-[#F9FAFB] border-r border-gray-100 flex flex-col p-8 font-poppins">
@@ -69,7 +71,10 @@ export default function OnboardingSidebar({
 
 
       <div className="mt-auto">
-        <button className="text-[14px] text-slate-400 font-semibold hover:text-[#066EFF] transition-colors flex items-center justify-center w-full">
+        <button 
+          onClick={() => onSkip?.()}
+          className="text-[14px] text-slate-400 font-semibold hover:text-[#066EFF] transition-colors flex items-center justify-center w-full cursor-pointer"
+        >
           Skip Onboarding
         </button>
       </div>

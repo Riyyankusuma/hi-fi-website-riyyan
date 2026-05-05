@@ -39,12 +39,12 @@ export default function Step6({ onFinish, onBack }: Step6Props) {
     // Simulate GitHub OAuth process
     setTimeout(() => {
       setUserData({
-        username: "Meisa354",
-        name: "Meisa",
-        avatar: "https://github.com/Meisa354.png",
-        repos: 12,
-        stars: 45,
-        followers: 120,
+        username: "alexdev",
+        name: "Alex",
+        avatar: "https://github.com/alex.png", // This will trigger the fallback to 'A'
+        repos: 24,
+        stars: 156,
+        followers: 892,
       });
       setStatus("connected");
       toast.success("GitHub account connected successfully!");
