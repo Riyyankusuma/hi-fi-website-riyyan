@@ -95,7 +95,13 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return
-    onSelect(api)
+    
+    // Use an effect to synchronize the initial state
+    const syncState = () => {
+      onSelect(api)
+    }
+    
+    syncState()
     api.on("reInit", onSelect)
     api.on("select", onSelect)
 

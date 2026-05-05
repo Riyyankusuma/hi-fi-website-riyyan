@@ -1,15 +1,112 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeftIcon, ChevronRightIcon, UploadIcon } from "lucide-react";
+import { 
+  ChevronLeftIcon, 
+  ChevronRightIcon, 
+  UploadIcon, 
+  FileTextIcon, 
+  Loader2Icon, 
+  CheckCircle2Icon,
+  XIcon
+} from "lucide-react";
+import { toast } from "sonner";
 
-export default function Step4({
-  onNext,
-  onBack,
-}: {
+type Step4Props = {
   onNext: () => void;
   onBack: () => void;
-}) {
+};
+
+type AnalysisStatus = "idle" | "uploading" | "analyzing" | "completed";
+
+export default function Step4({ onNext, onBack }: Step4Props) {
+  const [file, setFile] = useState<File | null>(null);
+  const [status, setStatus] = useState<AnalysisStatus>("idle");
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [analysisResult, setAnalysisResult] = useState<{
+    skills: string[];
+    experience: string;
+  } | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      processFile(selectedFile);
+    }
+  };
+
+  const processFile = (selectedFile: File) => {
+    // Basic validation
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(selectedFile.type)) {
+      toast.error("Please upload a PDF or Word document");
+      return;
+    }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error("File size exceeds 10MB limit");
+      return;
+    }
+
+    setFile(selectedFile);
+    setStatus("uploading");
+    
+    // Simulate upload
+    setTimeout(() => {
+      setStatus("idle");
+      toast.success("CV uploaded successfully!");
+    }, 1500);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile) {
+      processFile(droppedFile);
+    }
+  };
+
+  const startAnalysis = () => {
+    if (!file) return;
+    
+    setStatus("analyzing");
+    
+    // Simulate AI analysis
+    setTimeout(() => {
+      setAnalysisResult({
+        skills: ["React.js", "Next.js", "TypeScript", "Tailwind CSS", "UI/UX Design", "Figma"],
+        experience: "3+ years in Frontend Development with a focus on modern web applications and responsive design.",
+      });
+      setStatus("completed");
+      toast.success("Analysis complete!");
+    }, 3000);
+  };
+
+  const resetUpload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFile(null);
+    setStatus("idle");
+    setAnalysisResult(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <div className="flex flex-col items-center justify-center w-full animate-in fade-in duration-500 max-w-[720px] mx-auto py-4 px-4 sm:px-0">
       <div className="w-full mb-8 md:mb-10 text-center md:text-left">
@@ -22,18 +119,119 @@ export default function Step4({
         </p>
       </div>
 
-      <div className="w-full min-h-[200px] md:h-[250px] rounded-[24px] md:rounded-[32px] border-[1.6px] border-dashed border-[#066EFF4D] bg-[#F0F4FF80] flex flex-col items-center justify-center p-6 gap-4 cursor-pointer hover:bg-[#F0F4FF] transition-all group">
-        <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center shadow-sm shadow-blue-100 group-hover:scale-105 transition-transform">
-          <UploadIcon className="w-6 h-6 md:w-8 md:h-8 text-[#066EFF]" />
-        </div>
-        <div className="text-center">
-          <p className="text-[15px] md:text-[18px] font-medium text-[#475569] mb-1 md:mb-2 leading-tight">
-            Drop your CV here or click to browse
-          </p>
-          <p className="text-[12px] md:text-[13px] font-medium text-slate-400">
-            Supports PDF, DOC, DOCX (Max 10MB)
-          </p>
-        </div>
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+      />
+
+      <div 
+        onClick={() => status === "idle" && !file && fileInputRef.current?.click()}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`w-full min-h-[200px] md:h-[250px] rounded-[24px] md:rounded-[32px] border-[1.6px] border-dashed transition-all group relative flex flex-col items-center justify-center p-6 gap-4
+          ${isDragging ? "border-[#066EFF] bg-[#F0F4FF] scale-[1.02]" : "border-[#066EFF4D] bg-[#F0F4FF80]"}
+          ${!file ? "cursor-pointer hover:bg-[#F0F4FF]" : "cursor-default"}
+        `}
+      >
+        {!file && status === "idle" && (
+          <>
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center shadow-sm shadow-blue-100 group-hover:scale-105 transition-transform">
+              <UploadIcon className="w-6 h-6 md:w-8 md:h-8 text-[#066EFF]" />
+            </div>
+            <div className="text-center">
+              <p className="text-[15px] md:text-[18px] font-medium text-[#475569] mb-1 md:mb-2 leading-tight">
+                Drop your CV here or click to browse
+              </p>
+              <p className="text-[12px] md:text-[13px] font-medium text-slate-400">
+                Supports PDF, DOC, DOCX (Max 10MB)
+              </p>
+            </div>
+          </>
+        )}
+
+        {status === "uploading" && (
+          <div className="flex flex-col items-center gap-4">
+            <Loader2Icon className="w-10 h-10 text-[#066EFF] animate-spin" />
+            <p className="text-[16px] font-semibold text-[#066EFF]">Uploading CV...</p>
+          </div>
+        )}
+
+        {file && status !== "uploading" && (
+          <div className="w-full flex flex-col items-center gap-4">
+            <div className="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-blue-50 w-full max-w-md relative">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-[#066EFF]">
+                <FileTextIcon className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-bold text-[#0D3E9B] truncate">{file.name}</p>
+                <p className="text-[12px] font-medium text-slate-400">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+              </div>
+              <button 
+                onClick={resetUpload}
+                className="p-1 hover:bg-red-50 rounded-full text-slate-300 hover:text-red-500 transition-colors"
+              >
+                <XIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {status === "idle" && (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startAnalysis();
+                }}
+                className="bg-[#066EFF] hover:bg-[#0556cc] text-white px-8 py-6 h-auto rounded-2xl text-[16px] font-bold shadow-lg shadow-blue-500/20"
+              >
+                Analyze CV
+              </Button>
+            )}
+
+            {status === "analyzing" && (
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-3 text-[#066EFF]">
+                  <Loader2Icon className="w-5 h-5 animate-spin" />
+                  <span className="text-[15px] font-bold">Analyzing your skills...</span>
+                </div>
+                <div className="w-48 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#066EFF] animate-progress-fast" style={{ width: '100%' }}></div>
+                </div>
+              </div>
+            )}
+
+            {status === "completed" && analysisResult && (
+              <div className="w-full animate-in zoom-in-95 duration-500 mt-2">
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-green-100 space-y-4">
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CheckCircle2Icon className="w-5 h-5" />
+                    <span className="text-[14px] font-bold uppercase tracking-wider">Analysis Result</span>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-[13px] font-bold text-slate-500 uppercase mb-2">Extracted Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {analysisResult.skills.map((skill, i) => (
+                        <span key={i} className="px-3 py-1 bg-blue-50 text-[#066EFF] text-[12px] font-bold rounded-lg border border-blue-100">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[13px] font-bold text-slate-500 uppercase mb-2">Professional Summary</h4>
+                    <p className="text-[14px] text-[#475569] leading-relaxed italic">
+                      &quot;{analysisResult.experience}&quot;
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="w-full text-center md:text-left mt-8">
@@ -55,13 +253,15 @@ export default function Step4({
         </button>
         <div className="hidden sm:block grow" />
         <Button
+          disabled={status === "analyzing" || status === "uploading"}
           onClick={onNext}
-          className="grow sm:grow-0 h-14 px-12 bg-linear-to-r from-[#066EFF] to-[#0556cc] hover:from-[#0556cc] hover:to-[#044bb3] rounded-[20px] text-[15px] font-bold text-white shadow-lg shadow-blue-500/25 gap-3 group transition-all active:scale-[0.98]"
+          className="grow sm:grow-0 h-14 px-12 bg-linear-to-r from-[#066EFF] to-[#0556cc] hover:from-[#0556cc] hover:to-[#044bb3] rounded-[20px] text-[15px] font-bold text-white shadow-lg shadow-blue-500/25 gap-3 group transition-all active:scale-[0.98] disabled:opacity-50"
         >
-          Continue
+          {status === "completed" ? "Looks Good, Continue" : "Continue"}
           <ChevronRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
         </Button>
       </div>
     </div>
   );
 }
+

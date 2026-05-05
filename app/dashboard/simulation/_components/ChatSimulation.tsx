@@ -17,6 +17,32 @@ const interviewSuggestions = [
   "Describe a challenging project",
 ];
 
+interface SpeechRecognitionResult {
+  [index: number]: {
+    transcript: string;
+  };
+}
+
+interface SpeechRecognitionResultList {
+  [index: number]: SpeechRecognitionResult;
+  length: number;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: () => void;
+  onend: () => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  start: () => void;
+  stop: () => void;
+}
+
 const BotMessage = ({ text }: { text: string }) => (
   <div className="flex items-start gap-2.5 md:gap-3 max-w-[90%] md:max-w-[85%]">
     <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0 border-[0.8px] border-slate-200/50">
@@ -55,7 +81,7 @@ export const ChatSimulation = ({
   const [listeningTime, setListeningTime] = useState(0);
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [showVoiceResult, setShowVoiceResult] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const initialMessages: Message[] =
     type === "recruiter"
@@ -89,11 +115,11 @@ export const ChatSimulation = ({
   }, [messages, isListening]);
 
   useEffect(() => {
-    let timer: any;
+    let timer: NodeJS.Timeout;
     if (isListening) {
       timer = setInterval(() => setListeningTime((p) => p + 1), 1000);
     } else {
-      setListeningTime(0);
+      setTimeout(() => setListeningTime(0), 0);
     }
     return () => clearInterval(timer);
   }, [isListening]);
@@ -111,6 +137,7 @@ export const ChatSimulation = ({
 
   const startListening = () => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) {
         alert("Speech Recognition not supported in this browser.");
@@ -130,10 +157,10 @@ export const ChatSimulation = ({
         setIsListening(false);
       };
       
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = Array.from(event.results)
-          .map((result: any) => result[0])
-          .map((result: any) => result.transcript)
+          .map((result) => result[0])
+          .map((result) => result.transcript)
           .join("");
         
         setVoiceTranscript(transcript);
@@ -258,7 +285,7 @@ export const ChatSimulation = ({
                         key={i}
                         className="w-0.5 bg-[#066EFF] rounded-full animate-pulse"
                         style={{
-                          height: `${50 + Math.random() * 50}%`,
+                          height: `${40 + (i * 7) % 50}%`,
                           animationDelay: `${i * 0.1}s`,
                           animationDuration: "0.5s"
                         }}
